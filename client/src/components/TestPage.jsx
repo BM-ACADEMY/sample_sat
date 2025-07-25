@@ -1,17 +1,19 @@
-import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useEffect, useState, useContext } from "react";
+import axios from "axios";
+import { TestResultContext } from "../context/TestResultContext";
 
 // Use VITE_API_URL from environment variables
 const API_URL = import.meta.env.VITE_API_URL;
 
 const TestPage = () => {
+  const { setTestResult } = useContext(TestResultContext);
   const [questions, setQuestions] = useState([]);
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
-  const [emailError, setEmailError] = useState('');
-  const [phoneError, setPhoneError] = useState('');
+  const [emailError, setEmailError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
 
   // Email validation regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -22,7 +24,9 @@ const TestPage = () => {
     axios
       .get(`${API_URL}/questions`)
       .then((res) => setQuestions(res.data))
-      .catch(() => alert('Failed to load questions. Please check your backend.'));
+      .catch(() =>
+        alert("Failed to load questions. Please check your backend.")
+      );
   }, []);
 
   // Validate email on change
@@ -30,25 +34,25 @@ const TestPage = () => {
     const value = e.target.value;
     setEmail(value);
     if (!value) {
-      setEmailError('Email is required');
+      setEmailError("Email is required");
     } else if (!emailRegex.test(value)) {
-      setEmailError('Please enter a valid email address');
+      setEmailError("Please enter a valid email address");
     } else {
-      setEmailError('');
+      setEmailError("");
     }
   };
 
   // Validate phone number (exactly 10 digits)
   const handlePhoneChange = (e) => {
-    const value = e.target.value.replace(/[^\d]/g, ''); // Allow only digits
+    const value = e.target.value.replace(/[^\d]/g, ""); // Allow only digits
     setPhone(value);
-    
+
     if (!value) {
-      setPhoneError('Phone number is required');
+      setPhoneError("Phone number is required");
     } else if (!phoneRegex.test(value)) {
-      setPhoneError('Phone number must be exactly 10 digits');
+      setPhoneError("Phone number must be exactly 10 digits");
     } else {
-      setPhoneError('');
+      setPhoneError("");
     }
   };
 
@@ -58,7 +62,7 @@ const TestPage = () => {
 
   const handleSubmit = async () => {
     if (!email || !phone || emailError || phoneError) {
-      alert('Please correct the errors in Email and Phone Number fields.');
+      alert("Please correct the errors in Email and Phone Number fields.");
       return;
     }
 
@@ -68,73 +72,97 @@ const TestPage = () => {
     questions.forEach((q) => {
       const userAnswer = answers[q._id]?.trim().toLowerCase();
       const correct = q.correctAnswer?.trim().toLowerCase();
-      answerSheet[q._id] = answers[q._id] || '';
+      answerSheet[q._id] = answers[q._id] || "";
       if (userAnswer === correct) score++;
     });
 
     try {
       const res = await axios.post(`${API_URL}/submit-test`, {
         email,
-        phone, // Send 10-digit phone number as is
+        phone,
         answers: answerSheet,
         score,
       });
 
       const data = res.data;
 
+      // Update TestResultContext
+      setTestResult({
+        score: data.score,
+        percentage: data.percentage,
+        courses: data.courses,
+        email,
+        phone,
+      });
+
       // Send result to parent
       window.parent.postMessage(
         {
-          type: 'testSubmitted',
+          type: "testSubmitted",
           score: data.score,
           percentage: data.percentage,
           courses: data.courses,
+          email,
+          phone,
         },
-        '*'
+        "*"
       );
 
       setSubmitted(true);
     } catch (err) {
-      alert('Submission failed. Please check your backend.');
+      alert("Submission failed. Please check your backend.");
     }
   };
 
   return (
     <div className="bg-gray-100 min-h-screen flex justify-center py-10 px-4">
       <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-xl">
-        <h2 className="text-2xl font-semibold text-center mb-6">Student Test</h2>
+        <h2 className="text-2xl font-semibold text-center mb-6">
+          Student Test
+        </h2>
         <div className="flex flex-col gap-4 mb-6">
           <div>
             <input
               type="email"
               className={`border rounded px-4 py-2 w-full focus:outline-none focus:ring-2 ${
-                emailError ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+                emailError
+                  ? "border-red-500 focus:ring-red-200"
+                  : "border-gray-300 focus:ring-blue-200"
               }`}
               placeholder="Enter your Email"
               value={email}
               onChange={handleEmailChange}
               required
             />
-            {emailError && <p className="text-red-500 text-sm mt-1">{emailError}</p>}
+            {emailError && (
+              <p className="text-red-500 text-sm mt-1">{emailError}</p>
+            )}
           </div>
           <div>
             <input
               type="tel"
               className={`border rounded px-4 py-2 w-full focus:outline-none focus:ring-2 ${
-                phoneError ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+                phoneError
+                  ? "border-red-500 focus:ring-red-200"
+                  : "border-gray-300 focus:ring-blue-200"
               }`}
               placeholder="Enter 10-digit Phone Number"
               value={phone}
               onChange={handlePhoneChange}
-              maxLength={10} // Restrict to 10 digits
+              maxLength={10}
               required
             />
-            {phoneError && <p className="text-red-500 text-sm mt-1">{phoneError}</p>}
+            {phoneError && (
+              <p className="text-red-500 text-sm mt-1">{phoneError}</p>
+            )}
           </div>
         </div>
         <div className="space-y-4 mb-6">
           {questions.map((q) => (
-            <div key={q._id} className="border border-gray-200 p-4 rounded bg-gray-50">
+            <div
+              key={q._id}
+              className="border border-gray-200 p-4 rounded bg-gray-50"
+            >
               <p className="font-medium mb-2">{q.question}</p>
               {q.options.map((opt, idx) => (
                 <label key={idx} className="block mb-1">
@@ -156,12 +184,12 @@ const TestPage = () => {
           onClick={handleSubmit}
           className={`w-full py-3 rounded text-white font-semibold transition ${
             submitted || emailError || phoneError
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700'
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700"
           }`}
           disabled={submitted || emailError || phoneError}
         >
-          {submitted ? 'Test Submitted' : 'Submit Test'}
+          {submitted ? "Test Submitted" : "Submit Test"}
         </button>
       </div>
     </div>

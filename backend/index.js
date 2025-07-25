@@ -7,7 +7,6 @@ const courseRoutes = require('./routes/courseRoutes');
 const discountRoutes = require('./routes/discountRoutes');
 const questionRoutes = require('./routes/questionRoutes');
 const testRoutes = require('./routes/testRoutes');
-const paymentRoutes = require('./routes/paymentRoutes');
 
 const app = express();
 
@@ -24,7 +23,7 @@ app.use('/courses', courseRoutes);
 app.use('/discounts', discountRoutes);
 app.use('/questions', questionRoutes);
 app.use('/', testRoutes); // for /submit-test and /tests
-app.use('/payment', paymentRoutes);
+
 
 // Error-handling middleware
 app.use((err, req, res, next) => {

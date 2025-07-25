@@ -1,9 +1,11 @@
-// src/components/PlanSection.jsx
 import { useEffect, useState, useContext } from 'react';
 import { CheckCircle, User, Download, FileText, CreditCard } from 'lucide-react';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { TestResultContext } from '../context/TestResultContext';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 const courses = [
   {
@@ -41,9 +43,86 @@ export default function PlanSection() {
 
   useEffect(() => {
     AOS.init({ duration: 800, once: true });
+
+    // Load Razorpay script dynamically
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
   }, []);
 
   const alertComingSoon = (msg) => () => alert(msg);
+
+  const handlePayment = async (course) => {
+    if (!testResult || !testResult.email || !testResult.phone) {
+      alert('Please complete the test first to proceed with payment.');
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${API_URL}/create-order`, {
+        email: testResult.email,
+        phone: testResult.phone,
+        courseName: course.title,
+        amount: course.discountedPrice,
+      });
+
+      const { orderId, amount, currency, key } = response.data;
+
+      const options = {
+        key,
+        amount,
+        currency,
+        name: 'Course Enrollment',
+        description: `Payment for ${course.title}`,
+        order_id: orderId,
+        handler: async function (response) {
+          try {
+            const verifyResponse = await axios.post(`${API_URL}/verify-payment`, {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            if (verifyResponse.data.status === 'success') {
+              alert('Payment successful!');
+              window.parent.postMessage(
+                {
+                  type: 'paymentSuccess',
+                  course: course.title,
+                  amount: course.discountedPrice,
+                  email: testResult.email,
+                  phone: testResult.phone,
+                  paymentId: response.razorpay_payment_id,
+                },
+                '*'
+              );
+            } else {
+              alert('Payment verification failed.');
+            }
+          } catch (err) {
+            alert('Payment verification failed. Please contact support.');
+          }
+        },
+        prefill: {
+          email: testResult.email,
+          contact: testResult.phone,
+        },
+        theme: {
+          color: '#F4D03F',
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      alert('Failed to initiate payment. Please try again.');
+    }
+  };
 
   // Merge test results with course data
   const updatedCourses = courses.map((course) => {
@@ -121,7 +200,6 @@ export default function PlanSection() {
                 )}
               </ul>
               <div className="flex items-start gap-2 text-gray-400 text-sm mb-6">
-                <User className="mt-1" size={18} />
                 <div>
                   <strong className="block text-white">Who is this for?</strong>
                   {course.audience}
@@ -143,7 +221,7 @@ export default function PlanSection() {
                   View Syllabus
                 </button>
                 <button
-                  onClick={alertComingSoon('Payment link coming soon!')}
+                  onClick={() => handlePayment(course)}
                   className="w-full bg-gray-700 text-white font-semibold rounded-md py-2 hover:bg-gray-600 transition"
                 >
                   <CreditCard size={16} className="inline-block mr-2" />

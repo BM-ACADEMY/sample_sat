@@ -8,17 +8,19 @@ const SatTest = () => {
   const { setTestResult } = useContext(TestResultContext);
 
   useEffect(() => {
-    const handleMessage = (event) => {
-      if (event.data.type === 'testSubmitted') {
-        const { score, percentage, courses } = event.data;
-        setTestResult({ score, percentage, courses });
-        setIsModalOpen(false);
-      }
-    };
+  const handleMessage = (event) => {
+    if (event.data.type === 'testSubmitted') {
+      const { score, percentage, courses, email, phone } = event.data;
 
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [setTestResult]);
+      setTestResult({ score, percentage, courses, email, phone });
+      setIsModalOpen(false);
+    }
+  };
+
+  window.addEventListener('message', handleMessage);
+  return () => window.removeEventListener('message', handleMessage);
+}, [setTestResult]);
+
 
   return (
     <section className="py-24 bg-gradient-to-tr from-black via-slate-900 to-black">

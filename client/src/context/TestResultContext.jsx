@@ -4,7 +4,7 @@ import React, { createContext, useState } from 'react';
 export const TestResultContext = createContext();
 
 export const TestResultProvider = ({ children }) => {
-  const [testResult, setTestResult] = useState(null);
+  const [testResult, setTestResult] = useState(null); // will store: score, percentage, courses, email, phone
 
   return (
     <TestResultContext.Provider value={{ testResult, setTestResult }}>

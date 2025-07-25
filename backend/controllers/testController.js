@@ -2,6 +2,14 @@ const Test = require('../models/Test');
 const Question = require('../models/Question');
 const Discount = require('../models/Discount');
 const Course = require('../models/Course');
+const Payment = require('../models/Payment');
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
 exports.submitTest = async (req, res) => {
   try {
@@ -60,6 +68,84 @@ exports.getTests = async (req, res) => {
   try {
     const tests = await Test.find().sort({ createdAt: -1 });
     res.json(tests);
+  } catch (err) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+exports.createOrder = async (req, res) => {
+  try {
+    const { email, phone, courseName, amount } = req.body;
+
+    if (!email || !phone || !courseName || !amount) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    const course = await Course.findOne({ courseName });
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    const test = await Test.findOne({ $or: [{ email }, { phone }] });
+    if (!test) {
+      return res.status(400).json({ error: 'No test submission found for this user' });
+    }
+
+    const options = {
+      amount: Math.round(amount * 100), // Convert to paise
+      currency: 'INR',
+      receipt: `receipt_${Date.now()}`,
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    const payment = new Payment({
+      email,
+      phone,
+      courseName,
+      amount,
+      razorpayOrderId: order.id,
+    });
+    await payment.save();
+
+    res.json({
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      key: process.env.RAZORPAY_KEY_ID,
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+exports.verifyPayment = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+    const body = razorpay_order_id + '|' + razorpay_payment_id;
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(body.toString())
+      .digest('hex');
+
+    if (expectedSignature === razorpay_signature) {
+      await Payment.findOneAndUpdate(
+        { razorpayOrderId: razorpay_order_id },
+        {
+          razorpayPaymentId: razorpay_payment_id,
+          razorpaySignature: razorpay_signature,
+          status: 'completed',
+        }
+      );
+      res.json({ status: 'success' });
+    } else {
+      await Payment.findOneAndUpdate(
+        { razorpayOrderId: razorpay_order_id },
+        { status: 'failed' }
+      );
+      res.status(400).json({ error: 'Invalid signature' });
+    }
   } catch (err) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
