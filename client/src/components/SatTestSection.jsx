@@ -76,10 +76,10 @@ const SatTest = () => {
             data-aos-delay="500"
           >
             <h3 className="text-2xl font-bold text-green-700 mb-2">🎉 Your SAT Test Result</h3>
-            <p className="text-lg font-medium text-gray-800">
+            <p className="text-lg font-medium text-gray-200">
               Score: <span className="font-bold">{testResult.score}</span>
             </p>
-            <p className="text-lg font-medium text-gray-800">
+            <p className="text-lg font-medium text-gray-200">
               Percentage: <span className="font-bold">{testResult.percentage}%</span>
             </p>
           </div>
