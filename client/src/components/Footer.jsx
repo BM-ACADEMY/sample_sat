@@ -23,6 +23,16 @@ const Footer = () => {
             BM Academy offers hands-on training in courses like Digital Marketing, Web Development, and Cloud
             Computing. With expert guidance and career support, we help you unlock your potential and grow professionally.
           </p>
+            {/* Social Links */}
+          <div className="flex-1 min-w-[150px]">
+            <h3 className="font-semibold text-base mb-3 md:mb-5">Follow Us</h3>
+            <div className="flex gap-4 text-gray-300">
+              <a href="https://www.instagram.com/bmacademypondy/" target="_blank" rel="noreferrer" className="hover:text-white"><Instagram size={20} /></a>
+              <a href="https://x.com/BMACADEMYPONDY" target="_blank" rel="noreferrer" className="hover:text-white"><Twitter size={20} /></a>
+              <a href="https://www.facebook.com/people/BM-Academy/61566753898165/" target="_blank" rel="noreferrer" className="hover:text-white"><Facebook size={20} /></a>
+              <a href="https://www.youtube.com/@bmacademypondy" target="_blank" rel="noreferrer" className="hover:text-white"><Youtube size={20} /></a>
+            </div>
+          </div>
         </div>
 
         {/* Right Columns */}
@@ -38,16 +48,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Social Links */}
-          <div className="flex-1 min-w-[150px]">
-            <h3 className="font-semibold text-base mb-3 md:mb-5">Follow Us</h3>
-            <div className="flex gap-4 text-gray-300">
-              <a href="https://www.instagram.com/bmacademypondy/" target="_blank" rel="noreferrer" className="hover:text-white"><Instagram size={20} /></a>
-              <a href="https://x.com/BMACADEMYPONDY" target="_blank" rel="noreferrer" className="hover:text-white"><Twitter size={20} /></a>
-              <a href="https://www.facebook.com/people/BM-Academy/61566753898165/" target="_blank" rel="noreferrer" className="hover:text-white"><Facebook size={20} /></a>
-              <a href="https://www.youtube.com/@bmacademypondy" target="_blank" rel="noreferrer" className="hover:text-white"><Youtube size={20} /></a>
-            </div>
-          </div>
+        
 
           {/* Contact Info */}
           <div className="flex-1 min-w-[180px]">

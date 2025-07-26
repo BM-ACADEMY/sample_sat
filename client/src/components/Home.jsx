@@ -86,7 +86,7 @@ const HeroSection = () => {
       {/* CTA Buttons */}
       <div className="mx-auto w-full flex items-center justify-center gap-3 mt-6" data-aos="fade-up" data-aos-delay="1000">
         <button
-          onClick={() => window.open("https://example.com/download-brochure", "_blank")}
+          onClick={() => window.open("https://www.google.com/search?q=BM+Academy+reviews", "_blank")}
           className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-full font-medium transition"
         >
           Google Reviews

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
   PlusCircle,
-  Info ,
+  Info,
   List,
   CheckCircle,
   Send,
@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
-
 
 const AdminPage = () => {
   const [currentTab, setCurrentTab] = useState('questions');
@@ -297,195 +296,241 @@ const AdminPage = () => {
   };
 
   const renderQuestionForm = () => (
-    <div className="bg-white rounded-2xl shadow-lg p-6 max-w-md w-full max-h-[600px] overflow-y-auto">
-      <h2 className="text-2xl font-bold text-gray-800 text-center mb-4 flex items-center justify-center">
-        <PlusCircle className="mr-2" /> {editingId ? 'Edit Question' : 'Add Question'}
+    <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full max-h-[600px] overflow-y-auto transition-all duration-300 transform hover:shadow-xl">
+      <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6 flex items-center justify-center">
+        <PlusCircle className="mr-2 text-blue-600" size={24} /> {editingId ? 'Edit Question' : 'Add Question'}
       </h2>
-      <form onSubmit={handleQuestionSubmit}>
-        <label className=" mb-2 font-bold text-gray-700 flex items-center">
-          <Info  className="mr-2" /> Question:
-        </label>
-        <textarea
-          name="question"
-          value={questionFormData.question}
-          onChange={handleQuestionFormChange}
-          required
-          className="w-full p-2 border rounded-lg focus:border-blue-500 focus:outline-none"
-        />
-        <label className=" mt-4 mb-2 font-bold text-gray-700 flex items-center">
-          <List className="mr-2" /> Add Option:
-        </label>
-        <input
-          type="text"
-          value={optionInput}
-          onChange={(e) => setOptionInput(e.target.value)}
-          className="w-full p-2 border rounded-lg focus:border-blue-500 focus:outline-none"
-        />
-        <button
-          type="button"
-          onClick={() => {
-            addOption(optionInput);
-            setOptionInput('');
-          }}
-          className="mt-2 w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition"
-        >
-          <PlusCircle className="inline mr-2" /> Add Option
-        </button>
-        <ul className="mt-2 flex flex-wrap gap-2">
-          {optionsArray.map((opt, index) => (
-            <li key={index} className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-medium">
-              {opt}
-            </li>
-          ))}
-        </ul>
-        <label className=" mt-4 mb-2 font-bold text-gray-700 flex items-center">
-          <CheckCircle className="mr-2" /> Correct Answer:
-        </label>
-        <input
-          type="text"
-          name="correctAnswer"
-          value={questionFormData.correctAnswer}
-          onChange={handleQuestionFormChange}
-          required
-          className="w-full p-2 border rounded-lg focus:border-blue-500 focus:outline-none"
-        />
-        <button type="submit" className="mt-4 w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition">
-          <Send className="inline mr-2" /> Submit
-        </button>
-        <button
-          type="button"
-          onClick={resetForm}
-          className="mt-2 w-full bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition"
-        >
-          <X className="inline mr-2" /> Cancel
-        </button>
+      <form onSubmit={handleQuestionSubmit} className="space-y-5">
+        <div>
+          <label className="block mb-2 font-medium text-gray-700 flex items-center">
+            <Info className="mr-2 text-blue-500" size={18} /> Question
+          </label>
+          <textarea
+            name="question"
+            value={questionFormData.question}
+            onChange={handleQuestionFormChange}
+            required
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+            rows="4"
+          />
+        </div>
+        <div>
+          <label className="block mb-2 font-medium text-gray-700 flex items-center">
+            <List className="mr-2 text-blue-500" size={18} /> Add Option
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={optionInput}
+              onChange={(e) => setOptionInput(e.target.value)}
+              className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                addOption(optionInput);
+                setOptionInput('');
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 flex items-center"
+            >
+              <PlusCircle className="mr-2" size={18} /> Add
+            </button>
+          </div>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {optionsArray.map((opt, index) => (
+              <li key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium flex items-center">
+                {opt}
+                <button
+                  onClick={() => setOptionsArray(optionsArray.filter((_, i) => i !== index))}
+                  className="ml-2 text-red-500 hover:text-red-700"
+                >
+                  <X size={14} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <label className="block mb-2 font-medium text-gray-700 flex items-center">
+            <CheckCircle className="mr-2 text-blue-500" size={18} /> Correct Answer
+          </label>
+          <input
+            type="text"
+            name="correctAnswer"
+            value={questionFormData.correctAnswer}
+            onChange={handleQuestionFormChange}
+            required
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+          />
+        </div>
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            className="flex-1 bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center"
+          >
+            <Send className="mr-2" size={18} /> Submit
+          </button>
+          <button
+            type="button"
+            onClick={resetForm}
+            className="flex-1 bg-red-600 text-white p-3 rounded-lg hover:bg-red-700 transition duration-200 flex items-center justify-center"
+          >
+            <X className="mr-2" size={18} /> Cancel
+          </button>
+        </div>
       </form>
     </div>
   );
 
   const renderCourseForm = () => (
-    <div className="bg-white rounded-2xl shadow-lg p-6 max-w-md w-full max-h-[600px] overflow-y-auto">
-      <h2 className="text-2xl font-bold text-gray-800 text-center mb-4 flex items-center justify-center">
-        <BookOpen className="mr-2" /> {editingId ? 'Edit Course' : 'Add Course'}
+    <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full max-h-[600px] overflow-y-auto transition-all duration-300 transform hover:shadow-xl">
+      <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6 flex items-center justify-center">
+        <BookOpen className="mr-2 text-blue-600" size={24} /> {editingId ? 'Edit Course' : 'Add Course'}
       </h2>
-      <form onSubmit={handleCourseSubmit}>
-        <label className=" mb-2 font-bold text-gray-700 flex items-center">
-          <BookOpen className="mr-2" /> Course Name:
-        </label>
-        <input
-          type="text"
-          name="courseName"
-          value={courseFormData.courseName}
-          onChange={handleCourseFormChange}
-          required
-          className="w-full p-2 border rounded-lg focus:border-blue-500 focus:outline-none"
-        />
-        <label className=" mt-4 mb-2 font-bold text-gray-700 flex items-center">
-          <span className="mr-2">₹</span> Fee (INR):
-        </label>
-        <input
-          type="number"
-          name="fee"
-          value={courseFormData.fee}
-          onChange={handleCourseFormChange}
-          required
-          className="w-full p-2 border rounded-lg focus:border-blue-500 focus:outline-none"
-        />
-        <button type="submit" className="mt-4 w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition">
-          <Send className="inline mr-2" /> Submit
-        </button>
-        <button
-          type="button"
-          onClick={resetForm}
-          className="mt-2 w-full bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition"
-        >
-          <X className="inline mr-2" /> Cancel
-        </button>
+      <form onSubmit={handleCourseSubmit} className="space-y-5">
+        <div>
+          <label className="block mb-2 font-medium text-gray-700 flex items-center">
+            <BookOpen className="mr-2 text-blue-500" size={18} /> Course Name
+          </label>
+          <input
+            type="text"
+            name="courseName"
+            value={courseFormData.courseName}
+            onChange={handleCourseFormChange}
+            required
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+          />
+        </div>
+        <div>
+          <label className="block mb-2 font-medium text-gray-700 flex items-center">
+            <span className="mr-2">₹</span> Fee (INR)
+          </label>
+          <input
+            type="number"
+            name="fee"
+            value={courseFormData.fee}
+            onChange={handleCourseFormChange}
+            required
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+          />
+        </div>
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            className="flex-1 bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center"
+          >
+            <Send className="mr-2" size={18} /> Submit
+          </button>
+          <button
+            type="button"
+            onClick={resetForm}
+            className="flex-1 bg-red-600 text-white p-3 rounded-lg hover:bg-red-700 transition duration-200 flex items-center justify-center"
+          >
+            <X className="mr-2" size={18} /> Cancel
+          </button>
+        </div>
       </form>
     </div>
   );
 
   const renderDiscountForm = () => (
-    <div className="bg-white rounded-2xl shadow-lg p-6 max-w-md w-full max-h-[600px] overflow-y-auto">
-      <h2 className="text-2xl font-bold text-gray-800 text-center mb-4 flex items-center justify-center">
-        <Percent className="mr-2" /> {editingId ? 'Edit Discount' : 'Add Discount'}
+    <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full max-h-[600px] overflow-y-auto transition-all duration-300 transform hover:shadow-xl">
+      <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6 flex items-center justify-center">
+        <Percent className="mr-2 text-blue-600" size={24} /> {editingId ? 'Edit Discount' : 'Add Discount'}
       </h2>
-      <form onSubmit={handleDiscountSubmit}>
-        <label className=" mb-2 font-bold text-gray-700 flex items-center">
-          <Percent className="mr-2" /> Min Score (%):
-        </label>
-        <input
-          type="number"
-          name="minScore"
-          value={discountFormData.minScore}
-          onChange={handleDiscountFormChange}
-          min="0"
-          max="100"
-          required
-          className="w-full p-2 border rounded-lg focus:border-blue-500 focus:outline-none"
-        />
-        <label className=" mt-4 mb-2 font-bold text-gray-700 flex items-center">
-          <Percent className="mr-2" /> Max Score (%):
-        </label>
-        <input
-          type="number"
-          name="maxScore"
-          value={discountFormData.maxScore}
-          onChange={handleDiscountFormChange}
-          min="0"
-          max="100"
-          required
-          className="w-full p-2 border rounded-lg focus:border-blue-500 focus:outline-none"
-        />
-        <label className=" mt-4 mb-2 font-bold text-gray-700 flex items-center">
-          <Percent className="mr-2" /> Discount (%):
-        </label>
-        <input
-          type="number"
-          name="discountPercentage"
-          value={discountFormData.discountPercentage}
-          onChange={handleDiscountFormChange}
-          min="0"
-          max="100"
-          required
-          className="w-full p-2 border rounded-lg focus:border-blue-500 focus:outline-none"
-        />
-        <button type="submit" className="mt-4 w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition">
-          <Send className="inline mr-2" /> Submit
-        </button>
-        <button
-          type="button"
-          onClick={resetForm}
-          className="mt-2 w-full bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition"
-        >
-          <X className="inline mr-2" /> Cancel
-        </button>
+      <form onSubmit={handleDiscountSubmit} className="space-y-5">
+        <div>
+          <label className="block mb-2 font-medium text-gray-700 flex items-center">
+            <Percent className="mr-2 text-blue-500" size={18} /> Min Score (%)
+          </label>
+          <input
+            type="number"
+            name="minScore"
+            value={discountFormData.minScore}
+            onChange={handleDiscountFormChange}
+            min="0"
+            max="100"
+            required
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+          />
+        </div>
+        <div>
+          <label className="block mb-2 font-medium text-gray-700 flex items-center">
+            <Percent className="mr-2 text-blue-500" size={18} /> Max Score (%)
+          </label>
+          <input
+            type="number"
+            name="maxScore"
+            value={discountFormData.maxScore}
+            onChange={handleDiscountFormChange}
+            min="0"
+            max="100"
+            required
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+          />
+        </div>
+        <div>
+          <label className="block mb-2 font-medium text-gray-700 flex items-center">
+            <Percent className="mr-2 text-blue-500" size={18} /> Discount (%)
+          </label>
+          <input
+            type="number"
+            name="discountPercentage"
+            value={discountFormData.discountPercentage}
+            onChange={handleDiscountFormChange}
+            min="0"
+            max="100"
+            required
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+          />
+        </div>
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            className="flex-1 bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center"
+          >
+            <Send className="mr-2" size={18} /> Submit
+          </button>
+          <button
+            type="button"
+            onClick={resetForm}
+            className="flex-1 bg-red-600 text-white p-3 rounded-lg hover:bg-red-700 transition duration-200 flex items-center justify-center"
+          >
+            <X className="mr-2" size={18} /> Cancel
+          </button>
+        </div>
       </form>
     </div>
   );
 
   const renderQuestionTable = () => (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse">
+      <table className="w-full border-collapse bg-white rounded-xl shadow-lg">
         <thead>
-          <tr className="bg-blue-500 text-white">
-            <th className="p-3 text-left">Question</th>
-            <th className="p-3 text-left">Options</th>
-            <th className="p-3 text-left">Correct Answer</th>
-            <th className="p-3 text-left">Actions</th>
+          <tr className="bg-blue-600 text-white">
+            <th className="p-4 text-left text-sm font-semibold">Question</th>
+            <th className="p-4 text-left text-sm font-semibold">Options</th>
+            <th className="p-4 text-left text-sm font-semibold">Correct Answer</th>
+            <th className="p-4 text-left text-sm font-semibold">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {questions.map((q) => (
-            <tr key={q._id} className="bg-gray-50 border-b">
-              <td className="p-3">{q.question}</td>
-              <td className="p-3">{q.options.join(', ')}</td>
-              <td className="p-3">{q.correctAnswer}</td>
-              <td className="p-3">
-                <button onClick={() => editQuestion(q._id)} className="text-yellow-500 mr-2">
+          {questions.map((q, index) => (
+            <tr key={q._id} className={`border-b ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-blue-50 transition duration-150`}>
+              <td className="p-4 text-gray-700">{q.question}</td>
+              <td className="p-4 text-gray-700">{q.options.join(', ')}</td>
+              <td className="p-4 text-gray-700">{q.correctAnswer}</td>
+              <td className="p-4">
+                <button
+                  onClick={() => editQuestion(q._id)}
+                  className="text-yellow-600 hover:text-yellow-700 mr-3 transition duration-200"
+                >
                   <Edit size={20} />
                 </button>
-                <button onClick={() => deleteQuestion(q._id)} className="text-red-500">
+                <button
+                  onClick={() => deleteQuestion(q._id)}
+                  className="text-red-600 hover:text-red-700 transition duration-200"
+                >
                   <Trash2 size={20} />
                 </button>
               </td>
@@ -505,27 +550,30 @@ const AdminPage = () => {
     return (
       <div>
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+          <table className="w-full border-collapse bg-white rounded-xl shadow-lg">
             <thead>
-              <tr className="bg-blue-500 text-white">
-                <th className="p-3 text-left">Email</th>
-                <th className="p-3 text-left">Phone</th>
-                <th className="p-3 text-left">Score</th>
+              <tr className="bg-blue-600 text-white">
+                <th className="p-4 text-left text-sm font-semibold">Email</th>
+                <th className="p-4 text-left text-sm font-semibold">Phone</th>
+                <th className="p-4 text-left text-sm font-semibold">Score</th>
               </tr>
             </thead>
             <tbody>
               {paginatedTests.length === 0 ? (
                 <tr>
-                  <td colSpan="3" className="p-3 text-center bg-white">
+                  <td colSpan="3" className="p-4 text-center text-gray-500">
                     No data available
                   </td>
                 </tr>
               ) : (
-                paginatedTests.map((test) => (
-                  <tr key={test._id} className="bg-gray-50 border-b">
-                    <td className="p-3">{test.email || 'N/A'}</td>
-                    <td className="p-3">{test.phone || 'N/A'}</td>
-                    <td className="p-3">{test.score ?? '0'}</td>
+                paginatedTests.map((test, index) => (
+                  <tr
+                    key={test._id}
+                    className={`border-b ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-blue-50 transition duration-150`}
+                  >
+                    <td className="p-4 text-gray-700">{test.email || 'N/A'}</td>
+                    <td className="p-4 text-gray-700">{test.phone || 'N/A'}</td>
+                    <td className="p-4 text-gray-700">{test.score ?? '0'}</td>
                   </tr>
                 ))
               )}
@@ -533,21 +581,23 @@ const AdminPage = () => {
           </table>
         </div>
         {tests.length > 0 && (
-          <div className="mt-4 text-center">
+          <div className="mt-6 flex justify-center gap-2">
             <button
               onClick={() => changePage(currentPage - 1)}
               disabled={currentPage === 1}
-              className={`px-4 py-2 mx-1 rounded ${currentPage === 1 ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
+              className={`px-4 py-2 rounded-lg flex items-center ${
+                currentPage === 1 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'
+              } transition duration-200`}
             >
-              <ChevronLeft className="inline" /> Previous
+              <ChevronLeft className="mr-2" size={18} /> Previous
             </button>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
                 key={page}
                 onClick={() => changePage(page)}
-                className={`px-4 py-2 mx-1 rounded ${
-                  page === currentPage ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white hover:bg-blue-600'
-                }`}
+                className={`px-4 py-2 rounded-lg ${
+                  page === currentPage ? 'bg-blue-700 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'
+                } transition duration-200`}
               >
                 {page}
               </button>
@@ -555,9 +605,11 @@ const AdminPage = () => {
             <button
               onClick={() => changePage(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className={`px-4 py-2 mx-1 rounded ${currentPage === totalPages ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
+              className={`px-4 py-2 rounded-lg flex items-center ${
+                currentPage === totalPages ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'
+              } transition duration-200`}
             >
-              Next <ChevronRight className="inline" />
+              Next <ChevronRight className="ml-2" size={18} />
             </button>
           </div>
         )}
@@ -567,31 +619,40 @@ const AdminPage = () => {
 
   const renderCoursesTable = () => (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse">
+      <table className="w-full border-collapse bg-white rounded-xl shadow-lg">
         <thead>
-          <tr className="bg-blue-500 text-white">
-            <th className="p-3 text-left">Course</th>
-            <th className="p-3 text-left">Fee (INR)</th>
-            <th className="p-3 text-left">Actions</th>
+          <tr className="bg-blue-600 text-white">
+            <th className="p-4 text-left text-sm font-semibold">Course</th>
+            <th className="p-4 text-left text-sm font-semibold">Fee (INR)</th>
+            <th className="p-4 text-left text-sm font-semibold">Actions</th>
           </tr>
         </thead>
         <tbody>
           {courses.length === 0 ? (
             <tr>
-              <td colSpan="3" className="p-3 text-center bg-white">
+              <td colSpan="3" className="p-4 text-center text-gray-500">
                 No courses available
               </td>
             </tr>
           ) : (
-            courses.map((c) => (
-              <tr key={c._id} className="bg-gray-50 border-b">
-                <td className="p-3">{c.courseName}</td>
-                <td className="p-3">₹{c.fee.toFixed(2)}</td>
-                <td className="p-3">
-                  <button onClick={() => editCourse(c._id)} className="text-yellow-500 mr-2">
+            courses.map((c, index) => (
+              <tr
+                key={c._id}
+                className={`border-b ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-blue-50 transition duration-150`}
+              >
+                <td className="p-4 text-gray-700">{c.courseName}</td>
+                <td className="p-4 text-gray-700">₹{c.fee.toFixed(2)}</td>
+                <td className="p-4">
+                  <button
+                    onClick={() => editCourse(c._id)}
+                    className="text-yellow-600 hover:text-yellow-700 mr-3 transition duration-200"
+                  >
                     <Edit size={20} />
                   </button>
-                  <button onClick={() => deleteCourse(c._id)} className="text-red-500">
+                  <button
+                    onClick={() => deleteCourse(c._id)}
+                    className="text-red-600 hover:text-red-700 transition duration-200"
+                  >
                     <Trash2 size={20} />
                   </button>
                 </td>
@@ -605,33 +666,42 @@ const AdminPage = () => {
 
   const renderDiscountsTable = () => (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse">
+      <table className="w-full border-collapse bg-white rounded-xl shadow-lg">
         <thead>
-          <tr className="bg-blue-500 text-white">
-            <th className="p-3 text-left">Min Score (%)</th>
-            <th className="p-3 text-left">Max Score (%)</th>
-            <th className="p-3 text-left">Discount (%)</th>
-            <th className="p-3 text-left">Actions</th>
+          <tr className="bg-blue-600 text-white">
+            <th className="p-4 text-left text-sm font-semibold">Min Score (%)</th>
+            <th className="p-4 text-left text-sm font-semibold">Max Score (%)</th>
+            <th className="p-4 text-left text-sm font-semibold">Discount (%)</th>
+            <th className="p-4 text-left text-sm font-semibold">Actions</th>
           </tr>
         </thead>
         <tbody>
           {discounts.length === 0 ? (
             <tr>
-              <td colSpan="4" className="p-3 text-center bg-white">
+              <td colSpan="4" className="p-4 text-center text-gray-500">
                 No discounts available
               </td>
             </tr>
           ) : (
-            discounts.map((d) => (
-              <tr key={d._id} className="bg-gray-50 border-b">
-                <td className="p-3">{d.minScore}</td>
-                <td className="p-3">{d.maxScore}</td>
-                <td className="p-3">{d.discountPercentage}</td>
-                <td className="p-3">
-                  <button onClick={() => editDiscount(d._id)} className="text-yellow-500 mr-2">
+            discounts.map((d, index) => (
+              <tr
+                key={d._id}
+                className={`border-b ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-blue-50 transition duration-150`}
+              >
+                <td className="p-4 text-gray-700">{d.minScore}</td>
+                <td className="p-4 text-gray-700">{d.maxScore}</td>
+                <td className="p-4 text-gray-700">{d.discountPercentage}</td>
+                <td className="p-4">
+                  <button
+                    onClick={() => editDiscount(d._id)}
+                    className="text-yellow-600 hover:text-yellow-700 mr-3 transition duration-200"
+                  >
                     <Edit size={20} />
                   </button>
-                  <button onClick={() => deleteDiscount(d._id)} className="text-red-500">
+                  <button
+                    onClick={() => deleteDiscount(d._id)}
+                    className="text-red-600 hover:text-red-700 transition duration-200"
+                  >
                     <Trash2 size={20} />
                   </button>
                 </td>
@@ -644,47 +714,39 @@ const AdminPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-cyan-100 to-purple-200 p-5 flex justify-center items-start">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-6 flex justify-center">
       {notification.show && (
         <div
-          className="fixed top-5 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all"
-          style={{ backgroundColor: notification.color }}
+          className="fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-xl z-50 transition-all duration-300 animate-slide-down"
+          style={{ backgroundColor: notification.color, color: '#fff' }}
         >
           {notification.message}
         </div>
       )}
-      <div className="flex flex-wrap gap-5 max-w-6xl w-full">
-        <div className="flex-1 min-w-[300px]">
+      <div className="flex flex-col lg:flex-row gap-6 max-w-7xl w-full">
+        <div className="lg:w-1/3 min-w-[320px]">
           {currentTab === 'questions' || currentTab === 'students' ? renderQuestionForm() : currentTab === 'courses' ? renderCourseForm() : renderDiscountForm()}
         </div>
-        <div className="flex-1 min-w-[300px] bg-white rounded-2xl shadow-lg p-6">
-          <div className="flex gap-2 mb-5">
-            <button
-              onClick={() => switchTab('questions')}
-              className={`px-4 py-2 rounded-md font-bold ${currentTab === 'questions' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-            >
-              <Info  className="inline mr-2" /> Questions
-            </button>
-            <button
-              onClick={() => switchTab('students')}
-              className={`px-4 py-2 rounded-md font-bold ${currentTab === 'students' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-            >
-              <User className="inline mr-2" /> Attended Students
-            </button>
-            <button
-              onClick={() => switchTab('courses')}
-              className={`px-4 py-2 rounded-md font-bold ${currentTab === 'courses' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-            >
-              <BookOpen className="inline mr-2" /> Courses
-            </button>
-            <button
-              onClick={() => switchTab('discounts')}
-              className={`px-4 py-2 rounded-md font-bold ${currentTab === 'discounts' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-            >
-              <Percent className="inline mr-2" /> Discounts
-            </button>
+        <div className="lg:w-2/3 bg-white rounded-xl shadow-2xl p-8">
+          <div className="flex flex-wrap gap-3 mb-8">
+            {[
+              { tab: 'questions', icon: Info, label: 'Questions' },
+              { tab: 'students', icon: User, label: 'Attended Students' },
+              { tab: 'courses', icon: BookOpen, label: 'Courses' },
+              { tab: 'discounts', icon: Percent, label: 'Discounts' },
+            ].map(({ tab, icon: Icon, label }) => (
+              <button
+                key={tab}
+                onClick={() => switchTab(tab)}
+                className={`flex-1 px-4 py-2 rounded-lg font-semibold text-sm transition duration-200 flex items-center justify-center ${
+                  currentTab === tab ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <Icon className="mr-2" size={18} /> {label}
+              </button>
+            ))}
           </div>
-          <div className={currentTab}>
+          <div className="transition-all duration-300">
             {currentTab === 'questions' && renderQuestionTable()}
             {currentTab === 'students' && renderStudentsTable()}
             {currentTab === 'courses' && renderCoursesTable()}
@@ -692,6 +754,15 @@ const AdminPage = () => {
           </div>
         </div>
       </div>
+      <style jsx>{`
+        @keyframes slide-down {
+          0% { opacity: 0; transform: translateY(-20px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-down {
+          animation: slide-down 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 };

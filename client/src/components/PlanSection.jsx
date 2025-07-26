@@ -1,9 +1,13 @@
 import { useEffect, useState, useContext } from 'react';
-import { CheckCircle, User, Download, FileText, CreditCard } from 'lucide-react';
+import { CheckCircle, Download, FileText, CreditCard, X } from 'lucide-react';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import { TestResultContext } from '../context/TestResultContext';
 import axios from 'axios';
+import { TestResultContext } from '../context/TestResultContext';
+import ReactConfetti from 'react-confetti';
+import useWindowSize from 'react-use/lib/useWindowSize';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -38,13 +42,15 @@ const courses = [
 ];
 
 export default function PlanSection() {
-  const [year, setYear] = useState(new Date().getFullYear());
   const { testResult } = useContext(TestResultContext);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [paymentInfo, setPaymentInfo] = useState(null);
+  const { width, height } = useWindowSize();
+  const [isConfettiActive, setIsConfettiActive] = useState(true);
 
   useEffect(() => {
     AOS.init({ duration: 800, once: true });
 
-    // Load Razorpay script dynamically
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
@@ -55,11 +61,24 @@ export default function PlanSection() {
     };
   }, []);
 
-  const alertComingSoon = (msg) => () => alert(msg);
+  const notify = (message, type = 'error') => {
+    toast[type](message, {
+      position: 'top-center',
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: 'dark',
+    });
+  };
+
+  const alertComingSoon = (msg) => () => notify(msg, 'info');
 
   const handlePayment = async (course) => {
-    if (!testResult || !testResult.email || !testResult.phone) {
-      alert('Please complete the test first to proceed with payment.');
+    if (!testResult?.email || !testResult?.phone) {
+      notify('Please complete the Test first to proceed with payment.');
       return;
     }
 
@@ -89,45 +108,46 @@ export default function PlanSection() {
             });
 
             if (verifyResponse.data.status === 'success') {
-              alert('Payment successful!');
-              window.parent.postMessage(
-                {
-                  type: 'paymentSuccess',
-                  course: course.title,
-                  amount: course.discountedPrice,
-                  email: testResult.email,
-                  phone: testResult.phone,
-                  paymentId: response.razorpay_payment_id,
-                },
-                '*'
-              );
+              setPaymentInfo({
+                course: course.title,
+                amount: course.discountedPrice,
+                email: testResult.email,
+                phone: testResult.phone,
+                paymentId: response.razorpay_payment_id,
+              });
+              setShowSuccessModal(true);
+              setIsConfettiActive(true);
+              // Redirect to WhatsApp after confetti ends (8 seconds)
+              setTimeout(() => {
+                setIsConfettiActive(false);
+                window.location.href = 'https://wa.me/919944940051?text=Payment%20successful%20for%20' + encodeURIComponent(course.title);
+              }, 8000);
             } else {
-              alert('Payment verification failed.');
+              notify('Payment verification failed.');
             }
           } catch (err) {
-            alert('Payment verification failed. Please contact support.');
+            notify('Payment verification failed. Please contact support.');
           }
         },
         prefill: {
           email: testResult.email,
           contact: testResult.phone,
         },
-        theme: {
-          color: '#F4D03F',
-        },
+        theme: { color: '#F4D03F' },
       };
 
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (err) {
-      alert('Failed to initiate payment. Please try again.');
+      notify('Failed to initiate payment. Please try again.');
     }
   };
 
-  // Merge test results with course data
   const updatedCourses = courses.map((course) => {
-    if (testResult && testResult.courses) {
-      const matchedCourse = testResult.courses.find((c) => c.course.trim() === course.title.trim());
+    if (testResult?.courses) {
+      const matchedCourse = testResult.courses.find(
+        (c) => c.course.trim() === course.title.trim()
+      );
       if (matchedCourse) {
         return {
           ...course,
@@ -137,101 +157,182 @@ export default function PlanSection() {
         };
       }
     }
-    return { ...course, originalPrice: course.price, discountedPrice: course.price, discount: '0%' };
+    return {
+      ...course,
+      originalPrice: course.price,
+      discountedPrice: course.price,
+      discount: '0%',
+    };
   });
 
   return (
     <section
       id="plan"
-      className="min-h-screen py-20 flex items-center justify-center bg-gradient-to-tl from-black via-slate-900 to-black"
+      className="min-h-screen py-20 flex items-center justify-center bg-gradient-to-tl from-black via-slate-900 to-black relative"
     >
+      <ToastContainer />
+      
       <div className="container max-w-screen-xl px-6">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-extrabold text-white">
             Course Details – <span className="text-yellow-400">Scholarship Based</span>
           </h1>
-          {testResult && (
-            <div className="mt-4 text-green-400">
-              <p className="text-xl font-bold">Your Score: {testResult.score}</p>
-              <p>Percentage: {testResult.percentage}%</p>
-            </div>
-          )}
+         
         </div>
+
         <div className="flex flex-wrap justify-center gap-8">
           {updatedCourses.map((course, index) => (
             <div
               key={index}
-              className="bg-gradient-to-tr from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-sm flex flex-col shadow-xl transition-transform"
+              className="bg-gradient-to-tr from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-sm flex flex-col shadow-xl hover:shadow-2xl transition-shadow duration-300"
               data-aos="fade-up"
               data-aos-delay={index * 100}
             >
               <div className="text-center border-b border-gray-700 pb-4 mb-4">
-                <h3 className="text-xl font-bold text-white min-h-[50px] mb-4">{course.title}</h3>
-                <div className="flex flex-wrap justify-center gap-2 items-center">
+                <h3 className="text-xl font-bold text-white mb-4">{course.title}</h3>
+                <div className="flex justify-center gap-2 items-center">
                   <span className="text-3xl font-extrabold text-yellow-400">
                     ₹{course.discountedPrice.toFixed(2)}
                   </span>
                   {course.discount !== '0%' && (
-                    <span className="text-lg line-through text-red-400">
-                      ₹{course.originalPrice.toFixed(2)}
-                    </span>
-                  )}
-                  {course.discount !== '0%' && (
-                    <span className="text-sm text-green-400">({course.discount} off)</span>
+                    <>
+                      <span className="line-through text-red-400 text-lg">
+                        ₹{course.originalPrice.toFixed(2)}
+                      </span>
+                      <span className="text-sm text-green-400">({course.discount} off)</span>
+                    </>
                   )}
                 </div>
               </div>
+
               <ul className="text-gray-300 space-y-3 mb-6">
                 <li className="flex items-start gap-2">
                   <CheckCircle className="text-green-400 mt-1" size={18} />
                   <span>Duration: {course.duration}</span>
                 </li>
-                {course.mode && (
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="text-green-400 mt-1" size={18} />
-                    <span>Mode: {course.mode}</span>
-                  </li>
-                )}
-                {course.language && (
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="text-green-400 mt-1" size={18} />
-                    <span>Language: {course.language}</span>
-                  </li>
-                )}
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="text-green-400 mt-1" size={18} />
+                  <span>Mode: {course.mode}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="text-green-400 mt-1" size={18} />
+                  <span>Language: {course.language}</span>
+                </li>
               </ul>
-              <div className="flex items-start gap-2 text-gray-400 text-sm mb-6">
-                <div>
-                  <strong className="block text-white">Who is this for?</strong>
-                  {course.audience}
-                </div>
+
+              <div className="text-sm text-gray-400 mb-6">
+                <strong className="block text-white">Who is this for?</strong>
+                {course.audience}
               </div>
+
               <div className="flex flex-col gap-2 mt-auto">
                 <button
-                  onClick={alertComingSoon('Download Brochure coming soon!')}
-                  className="w-full border border-gray-600 text-gray-300 rounded-md py-2 hover:bg-yellow-100/10 hover:border-yellow-300 hover:text-yellow-300 transition"
+                  onClick={alertComingSoon('Brochure coming soon!')}
+                  className="w-full border border-gray-600 text-gray-300 rounded-md py-2 hover:bg-yellow-100/10 hover:border-yellow-300 hover:text-yellow-300 transition flex items-center justify-center"
                 >
-                  <Download size={16} className="inline-block mr-2" />
+                  <Download size={16} className="mr-2" />
                   View Brochure
                 </button>
                 <button
                   onClick={alertComingSoon('Syllabus will be available soon!')}
-                  className="w-full border border-gray-600 text-gray-300 rounded-md py-2 hover:bg-yellow-100/10 hover:border-yellow-300 hover:text-yellow-300 transition"
+                  className="w-full border border-gray-600 text-gray-300 rounded-md py-2 hover:bg-yellow-100/10 hover:border-yellow-300 hover:text-yellow-300 transition flex items-center justify-center"
                 >
-                  <FileText size={16} className="inline-block mr-2" />
+                  <FileText size={16} className="mr-2" />
                   View Syllabus
                 </button>
                 <button
                   onClick={() => handlePayment(course)}
-                  className="w-full bg-gray-700 text-white font-semibold rounded-md py-2 hover:bg-gray-600 transition"
+                  className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-semibold rounded-md py-2 hover:opacity-90 transition flex items-center justify-center"
                 >
-                  <CreditCard size={16} className="inline-block mr-2" />
-                  Pay via UPI
+                  <CreditCard size={16} className="mr-2" />
+                  Enroll Now
                 </button>
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Success Modal with Confetti */}
+      {showSuccessModal && (
+        <>
+          {/* Confetti - above backdrop but below modal content */}
+          {isConfettiActive && (
+            <ReactConfetti
+              width={width}
+              height={height}
+              numberOfPieces={800}
+              recycle={false}
+              style={{ 
+                position: 'fixed', 
+                zIndex: 100, // Higher than backdrop
+                pointerEvents: 'none' // Allows clicks to pass through
+              }}
+              onConfettiComplete={() => setIsConfettiActive(false)}
+            />
+          )}
+          
+          {/* Backdrop - below confetti */}
+          <div 
+            className="fixed inset-0 bg-black/80 z-50" // Lower z-index than confetti
+            onClick={() => setShowSuccessModal(false)}
+          />
+          
+          {/* Modal content - above everything */}
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 pointer-events-none">
+            <div 
+              className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-2xl p-8 max-w-md w-full relative overflow-hidden pointer-events-auto"
+              data-aos="zoom-in"
+            >
+              {/* Decorative elements */}
+              <div className="absolute -top-20 -right-20 w-40 h-40 bg-yellow-400/10 rounded-full blur-xl"></div>
+              <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-green-400/10 rounded-full blur-xl"></div>
+              
+              {/* Close button */}
+              <button 
+                onClick={() => setShowSuccessModal(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-white transition"
+              >
+                <X size={24} />
+              </button>
+              
+              {/* Content */}
+              <div className="relative z-10 text-center">
+                <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <CheckCircle className="text-green-400" size={48} strokeWidth={1.5} />
+                </div>
+                
+                <h2 className="text-3xl font-bold text-white mb-2">Payment Successful!</h2>
+                <p className="text-gray-300 mb-6">
+                  You're now enrolled in <span className="text-yellow-400 font-medium">{paymentInfo?.course}</span>
+                </p>
+                
+                <div className="bg-gray-800/50 rounded-lg p-4 mb-6">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-gray-400">Amount Paid:</span>
+                    <span className="font-medium text-gray-200">₹{paymentInfo?.amount}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Transaction ID:</span>
+                    <span className="text-green-400 font-mono text-sm">{paymentInfo?.paymentId}</span>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={() => setShowSuccessModal(false)}
+                  className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-semibold py-3 rounded-lg hover:opacity-90 transition"
+                >
+                  Continue to Dashboard
+                </button>
+                
+                <p className="text-gray-500 text-sm mt-4">
+                  We've sent the details to {paymentInfo?.email}
+                </p>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </section>
   );
 }
