@@ -11,8 +11,9 @@ const testRoutes = require('./routes/testRoutes');
 const app = express();
 
 // Middleware
-const allowedOrigins = process.env.ALLOWED_ORIGINS;
-app.use(cors({ origin: allowedOrigins }));
+// const allowedOrigins = process.env.ALLOWED_ORIGINS;
+// app.use(cors({ origin: allowedOrigins }));
+app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 // Connect to DB
