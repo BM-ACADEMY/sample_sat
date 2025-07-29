@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import * as XLSX from 'xlsx'; // For Excel parsing
+
 import {
   PlusCircle,
   Info,
@@ -16,6 +18,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CreditCard,
+  FileUp, // Icon for the import button
 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -31,6 +34,9 @@ const AdminPage = () => {
   const [tests, setTests] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  // Ref for the hidden file input element for questions
+  const questionFileInputRef = useRef(null);
 
   const showNotification = (message, color = '#4caf50') => {
     setNotification({ message, color, show: true });
@@ -74,6 +80,78 @@ const AdminPage = () => {
   });
   const [optionInput, setOptionInput] = useState('');
 
+  // Function to handle Excel file upload and parsing
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = event.target.result;
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(worksheet);
+
+        if (json.length === 0) {
+          showNotification('Excel file is empty or has an invalid format.', '#f44336');
+          return;
+        }
+
+        const mainHeading = json[0]?.mainHeading?.trim() || '';
+        if (!mainHeading) {
+          showNotification('The "mainHeading" column is missing or empty in the first row.', '#f44336');
+          return;
+        }
+
+        const parsedQuestions = json.map((row, index) => {
+          const questionText = row.questionText?.toString().trim();
+          const correctAnswerValue = row.correctAnswer;
+
+          if (correctAnswerValue === undefined || correctAnswerValue === null || !questionText) {
+            throw new Error(`Invalid data in row ${index + 2}. Each row must have 'questionText' and 'correctAnswer'.`);
+          }
+
+          const optionValues = Object.keys(row)
+            .filter(key => key.startsWith('option') && (row[key] !== undefined && row[key] !== null))
+            .map(key => row[key]);
+            
+          if (optionValues.length < 2) {
+            throw new Error(`Invalid data in row ${index + 2}. At least two options are required.`);
+          }
+
+          // **FIX:** Convert all values to trimmed strings for a reliable comparison.
+          const options = optionValues.map(opt => String(opt).trim());
+          const correctAnswer = String(correctAnswerValue).trim();
+
+          // **FIX:** Perform the validation on the cleaned data.
+          if (!options.includes(correctAnswer)) {
+            // This improved error message helps debug the Excel file itself.
+            throw new Error(`Correct answer for question in row ${index + 2} ('${correctAnswer}') is not listed in its options [${options.join(', ')}]. Check for extra spaces or data type mismatches in the Excel file.`);
+          }
+          
+          return { questionText, options, correctAnswer };
+        });
+
+        setQuestionFormData({
+          mainHeading: mainHeading,
+          questions: parsedQuestions,
+        });
+
+        showNotification('Excel data loaded successfully!', '#4caf50');
+      } catch (error) {
+        console.error("Error parsing Excel file:", error);
+        showNotification(error.message || 'Failed to parse Excel file. Check format.', '#f44336');
+      } finally {
+        // Reset file input to allow re-uploading the same file
+        if (e.target) e.target.value = null;
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+
   const handleQuestionFormChange = (e, index) => {
     const { name, value } = e.target;
     if (name === 'mainHeading') {
@@ -101,7 +179,6 @@ const AdminPage = () => {
     const removedOptionValue = updatedQuestions[questionIndex].options[optionIndex];
     updatedQuestions[questionIndex].options = updatedQuestions[questionIndex].options.filter((_, i) => i !== optionIndex);
     
-    // If the removed option was the correct answer, clear the correct answer
     if (updatedQuestions[questionIndex].correctAnswer === removedOptionValue) {
         updatedQuestions[questionIndex].correctAnswer = '';
     }
@@ -432,6 +509,16 @@ const AdminPage = () => {
       <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6 flex items-center justify-center">
         <Info className="mr-2 text-blue-600" size={24} /> {editingId ? 'Edit Question Set' : 'Add Question Set'}
       </h2>
+      
+      {/* Hidden file input for Excel upload */}
+      <input
+        type="file"
+        ref={questionFileInputRef}
+        onChange={handleFileUpload}
+        accept=".xlsx, .xls"
+        style={{ display: 'none' }}
+      />
+
       <form onSubmit={handleQuestionSubmit} className="space-y-5">
         <div>
           <label className="mb-2 font-medium text-gray-700 flex items-center">
@@ -473,11 +560,11 @@ const AdminPage = () => {
                     value={optionInput}
                     onChange={(e) => setOptionInput(e.target.value)}
                      onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addOption(index, optionInput);
-                      }
-                    }}
+                       if (e.key === 'Enter') {
+                         e.preventDefault();
+                         addOption(index, optionInput);
+                     }
+                     }}
                     className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
                   />
                   <button
@@ -533,13 +620,24 @@ const AdminPage = () => {
             </div>
           </div>
         ))}
-        <button
-          type="button"
-          onClick={addQuestionEntry}
-          className="w-full py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 flex items-center justify-center mt-4"
-        >
-          <PlusCircle className="mr-2" size={18} /> Add Another Question
-        </button>
+
+        <div className='space-y-3 mt-4'>
+            <button
+              type="button"
+              onClick={() => questionFileInputRef.current.click()}
+              className="w-full py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition duration-200 flex items-center justify-center"
+            >
+              <FileUp className="mr-2" size={18} /> Import from Excel
+            </button>
+            <button
+              type="button"
+              onClick={addQuestionEntry}
+              className="w-full py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 flex items-center justify-center"
+            >
+              <PlusCircle className="mr-2" size={18} /> Add Another Question
+            </button>
+        </div>
+
         <div className="flex gap-3 mt-4">
           <button
             type="submit"
