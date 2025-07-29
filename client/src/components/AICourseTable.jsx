@@ -46,19 +46,14 @@ const AICourseTable = () => {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [paymentId, setPaymentId] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Load Razorpay script and prefill user details from localStorage
+  // Load Razorpay script only once when the component mounts
   useEffect(() => {
-    // Load Razorpay script
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
     document.body.appendChild(script);
-
-    // Prefill user details from localStorage
-    const savedEmail = localStorage.getItem('userEmail') || '';
-    const savedPhone = localStorage.getItem('userPhone') || '';
-    setUserDetails({ email: savedEmail, phone: savedPhone });
 
     return () => {
       document.body.removeChild(script);
@@ -78,8 +73,10 @@ const AICourseTable = () => {
     return () => clearTimeout(timer);
   }, [paymentId, selectedCourse]);
 
+  // Modified handlePayClick to clear userDetails every time the form is opened
   const handlePayClick = (course) => {
     setSelectedCourse(course);
+    setUserDetails({ email: '', phone: '' }); // Clear input fields
     setShowForm(true);
   };
 
@@ -92,6 +89,8 @@ const AICourseTable = () => {
       });
       return;
     }
+
+    setIsLoading(true); // Start loading
 
     try {
       const amount = parseInt(selectedCourse.offer.replace('₹', ''));
@@ -126,12 +125,12 @@ const AICourseTable = () => {
             if (verifyData.status === 'success') {
               setPaymentId(response.razorpay_payment_id);
               setShowForm(false);
-              // Save user details to localStorage
+              // Save user details to localStorage for next time (optional, as you want to clear on open)
               localStorage.setItem('userEmail', userDetails.email);
               localStorage.setItem('userPhone', userDetails.phone);
-              setUserDetails({ email: '', phone: '' });
+              // userDetails is already cleared by handlePayClick for the next open, but good to ensure here too if needed
+              setUserDetails({ email: '', phone: '' }); 
 
-              // Show toast notification
               toast.success(
                 <div>
                   <h2 className="text-lg font-semibold">Payment Successful!</h2>
@@ -156,6 +155,8 @@ const AICourseTable = () => {
               position: 'top-right',
               autoClose: 3000,
             });
+          } finally {
+            setIsLoading(false); // End loading
           }
         },
         prefill: {
@@ -175,6 +176,7 @@ const AICourseTable = () => {
         position: 'top-right',
         autoClose: 3000,
       });
+      setIsLoading(false); // End loading
     }
   };
 
@@ -225,9 +227,36 @@ const AICourseTable = () => {
                 <div className="flex justify-end space-x-4 pt-4">
                   <button
                     type="submit"
-                    className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition"
+                    className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition relative"
+                    disabled={isLoading}
                   >
-                    Proceed to Payment
+                    {isLoading ? (
+                      <span className="flex items-center">
+                        <svg
+                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Processing...
+                      </span>
+                    ) : (
+                      'Proceed to Payment'
+                    )}
                   </button>
                   <button
                     type="button"

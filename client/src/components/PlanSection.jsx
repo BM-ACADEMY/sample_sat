@@ -87,7 +87,7 @@ export default function PlanSection() {
         email: testResult.email,
         phone: testResult.phone,
         courseName: course.title,
-        amount: course.discountedPrice,
+        amount: course.fixedAmount,
       });
 
       const { orderId, amount, currency, key } = response.data;
@@ -110,14 +110,13 @@ export default function PlanSection() {
             if (verifyResponse.data.status === 'success') {
               setPaymentInfo({
                 course: course.title,
-                amount: course.discountedPrice,
+                amount: course.fixedAmount,
                 email: testResult.email,
                 phone: testResult.phone,
                 paymentId: response.razorpay_payment_id,
               });
               setShowSuccessModal(true);
               setIsConfettiActive(true);
-              // Redirect to WhatsApp after confetti ends (8 seconds)
               setTimeout(() => {
                 setIsConfettiActive(false);
                 window.location.href = 'https://wa.me/919944940051?text=Payment%20successful%20for%20' + encodeURIComponent(course.title);
@@ -152,16 +151,16 @@ export default function PlanSection() {
         return {
           ...course,
           originalPrice: matchedCourse.originalFee,
-          discountedPrice: matchedCourse.discountedFee,
-          discount: matchedCourse.discount,
+          fixedAmount: matchedCourse.fixedAmount,
+          discountApplied: matchedCourse.discountApplied,
         };
       }
     }
     return {
       ...course,
       originalPrice: course.price,
-      discountedPrice: course.price,
-      discount: '0%',
+      fixedAmount: course.price,
+      discountApplied: false,
     };
   });
 
@@ -171,13 +170,11 @@ export default function PlanSection() {
       className="min-h-screen py-20 flex items-center justify-center bg-gradient-to-tl from-black via-slate-900 to-black relative"
     >
       <ToastContainer />
-      
       <div className="container max-w-screen-xl px-6">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-extrabold text-white">
             Course Details – <span className="text-yellow-400">Scholarship Based</span>
           </h1>
-         
         </div>
 
         <div className="flex flex-wrap justify-center gap-8">
@@ -192,14 +189,14 @@ export default function PlanSection() {
                 <h3 className="text-xl font-bold text-white mb-4">{course.title}</h3>
                 <div className="flex justify-center gap-2 items-center">
                   <span className="text-3xl font-extrabold text-yellow-400">
-                    ₹{course.discountedPrice.toFixed(2)}
+                    ₹{course.fixedAmount.toFixed(2)}
                   </span>
-                  {course.discount !== '0%' && (
+                  {course.discountApplied && (
                     <>
                       <span className="line-through text-red-400 text-lg">
                         ₹{course.originalPrice.toFixed(2)}
                       </span>
-                      <span className="text-sm text-green-400">({course.discount} off)</span>
+                      <span className="text-sm text-green-400">({testResult.percentage}%)</span>
                     </>
                   )}
                 </div>
@@ -253,10 +250,8 @@ export default function PlanSection() {
         </div>
       </div>
 
-      {/* Success Modal with Confetti */}
       {showSuccessModal && (
         <>
-          {/* Confetti - above backdrop but below modal content */}
           {isConfettiActive && (
             <ReactConfetti
               width={width}
@@ -265,48 +260,37 @@ export default function PlanSection() {
               recycle={false}
               style={{ 
                 position: 'fixed', 
-                zIndex: 100, // Higher than backdrop
-                pointerEvents: 'none' // Allows clicks to pass through
+                zIndex: 100,
+                pointerEvents: 'none'
               }}
               onConfettiComplete={() => setIsConfettiActive(false)}
             />
           )}
-          
-          {/* Backdrop - below confetti */}
           <div 
-            className="fixed inset-0 bg-black/80 z-50" // Lower z-index than confetti
+            className="fixed inset-0 bg-black/80 z-50"
             onClick={() => setShowSuccessModal(false)}
           />
-          
-          {/* Modal content - above everything */}
           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 pointer-events-none">
             <div 
               className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-2xl p-8 max-w-md w-full relative overflow-hidden pointer-events-auto"
               data-aos="zoom-in"
             >
-              {/* Decorative elements */}
               <div className="absolute -top-20 -right-20 w-40 h-40 bg-yellow-400/10 rounded-full blur-xl"></div>
               <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-green-400/10 rounded-full blur-xl"></div>
-              
-              {/* Close button */}
               <button 
                 onClick={() => setShowSuccessModal(false)}
                 className="absolute top-4 right-4 text-gray-400 hover:text-white transition"
               >
                 <X size={24} />
               </button>
-              
-              {/* Content */}
               <div className="relative z-10 text-center">
                 <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
                   <CheckCircle className="text-green-400" size={48} strokeWidth={1.5} />
                 </div>
-                
                 <h2 className="text-3xl font-bold text-white mb-2">Payment Successful!</h2>
                 <p className="text-gray-300 mb-6">
                   You're now enrolled in <span className="text-yellow-400 font-medium">{paymentInfo?.course}</span>
                 </p>
-                
                 <div className="bg-gray-800/50 rounded-lg p-4 mb-6">
                   <div className="flex justify-between mb-2">
                     <span className="text-gray-400">Amount Paid:</span>
@@ -317,14 +301,12 @@ export default function PlanSection() {
                     <span className="text-green-400 font-mono text-sm">{paymentInfo?.paymentId}</span>
                   </div>
                 </div>
-                
                 <button
                   onClick={() => setShowSuccessModal(false)}
                   className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-semibold py-3 rounded-lg hover:opacity-90 transition"
                 >
                   Continue to Dashboard
                 </button>
-                
                 <p className="text-gray-500 text-sm mt-4">
                   We've sent the details to {paymentInfo?.email}
                 </p>

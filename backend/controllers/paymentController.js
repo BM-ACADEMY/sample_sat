@@ -82,3 +82,18 @@ exports.verifyCoursePayment = async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
+
+
+
+exports.getPaymentHistory = async (req, res) => {
+  try {
+    const payments = await Payment.find()
+      .sort({ createdAt: -1 })
+      .select('email phone courseName amount status razorpayPaymentId createdAt');
+    res.json(payments);
+  } catch (err) {
+    console.error('Error fetching payment history:', err);
+    res.status(500).json({ error: 'Failed to fetch payment history' });
+  }
+};

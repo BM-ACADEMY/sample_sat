@@ -12,6 +12,7 @@ import { TestResultProvider } from './context/TestResultContext';
 import AdminPage from './components/admin/SatTest';
 import TestPage from './components/TestPage';
 import SatTest from './components/SatTestSection';
+import AdminPaymentHistory from './components/admin/AdminPaymentHistory';
 
 const HomePage = () => (
   <div>
@@ -34,6 +35,7 @@ const App = () => {
           <Route path="/" element={<HomePage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/test" element={<TestPage />} />
+          <Route path="/admin/payment-history" element={<AdminPaymentHistory />} />
         </Routes>
       </Router>
     </TestResultProvider>

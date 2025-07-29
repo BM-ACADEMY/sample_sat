@@ -1,3 +1,4 @@
+// testController.js
 const Test = require('../models/Test');
 const Question = require('../models/Question');
 const Discount = require('../models/Discount');
@@ -13,17 +14,30 @@ const razorpay = new Razorpay({
 
 exports.submitTest = async (req, res) => {
   try {
-    const { email, phone, answers } = req.body;
+    const { email, phone, answers, questionSetId } = req.body;
 
+    // Validate input
+    if (!email || !phone || !questionSetId || !answers) {
+      return res.status(400).json({ error: 'Email, phone, question set ID, and answers are required' });
+    }
+
+    // Check for existing test submission
     const existing = await Test.findOne({ $or: [{ email }, { phone }] });
     if (existing) {
       return res.status(400).json({ error: 'You have already submitted the test.' });
     }
 
-    const questions = await Question.find();
-    let score = 0;
+    // Fetch the selected question set
+    const questionSet = await Question.findById(questionSetId);
+    if (!questionSet) {
+      return res.status(404).json({ error: 'Question set not found' });
+    }
 
-    questions.forEach(q => {
+    // Calculate score for the selected question set
+    let score = 0;
+    const totalQuestions = questionSet.questions.length;
+
+    questionSet.questions.forEach(q => {
       const qid = q._id.toString();
       const userAnswer = answers[qid]?.trim().toLowerCase();
       const correctAnswer = q.correctAnswer?.trim().toLowerCase();
@@ -32,30 +46,41 @@ exports.submitTest = async (req, res) => {
       }
     });
 
-    const totalQuestions = questions.length;
+    // Scale score to 100 marks
     const percentage = totalQuestions > 0 ? (score / totalQuestions) * 100 : 0;
+    const scaledScore = percentage; // Percentage is already scaled to 100
 
-    const discounts = await Discount.find().sort({ minScore: 1 });
-    let discountPercentage = 0;
-    for (const discount of discounts) {
-      if (percentage >= discount.minScore && percentage <= discount.maxScore) {
-        discountPercentage = discount.discountPercentage;
-        break;
-      }
-    }
-
-    const testResult = new Test({ email, phone, answers, score });
-    await testResult.save();
-
+    // Fetch courses and apply discounts
     const courses = await Course.find();
-    const responseCourses = courses.map(c => ({
-      course: c.courseName,
-      originalFee: c.fee,
-      discount: `${discountPercentage}%`,
-      discountedFee: c.fee * (1 - discountPercentage / 100)
+    const responseCourses = await Promise.all(courses.map(async (c) => {
+      const discounts = await Discount.find({ courseId: c._id });
+      let fixedAmount = c.fee;
+
+      for (const discount of discounts) {
+        if (percentage >= discount.minPercentage && percentage <= discount.maxPercentage) {
+          fixedAmount = discount.fixedAmount;
+          break;
+        }
+      }
+
+      return {
+        course: c.courseName,
+        originalFee: c.fee,
+        fixedAmount,
+        discountApplied: fixedAmount !== c.fee
+      };
     }));
 
-    res.json({ score, percentage: percentage.toFixed(2), courses: responseCourses });
+    // Save test result
+    const testResult = new Test({ email, phone, answers, score: scaledScore, questionSetId });
+    await testResult.save();
+
+    res.json({
+      score: scaledScore.toFixed(2),
+      percentage: percentage.toFixed(2),
+      courses: responseCourses,
+      questionSet: questionSet.mainHeading
+    });
   } catch (err) {
     if (err.code === 11000) {
       return res.status(400).json({ error: 'Email or phone number already used for a test submission' });
@@ -65,13 +90,18 @@ exports.submitTest = async (req, res) => {
 };
 
 exports.getTests = async (req, res) => {
-  try {
-    const tests = await Test.find().sort({ createdAt: -1 });
-    res.json(tests);
-  } catch (err) {
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+  try {
+    // MODIFICATION: Add .populate() to fetch the mainHeading from the Question model
+    const tests = await Test.find()
+      .populate('questionSetId', 'mainHeading') // <-- Add this line
+      .sort({ createdAt: -1 });
+
+    res.json(tests);
+  } catch (err) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 };
+
 
 exports.createOrder = async (req, res) => {
   try {
