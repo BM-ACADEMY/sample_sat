@@ -98,7 +98,14 @@ const AdminPage = () => {
 
   const removeOption = (questionIndex, optionIndex) => {
     const updatedQuestions = [...questionFormData.questions];
+    const removedOptionValue = updatedQuestions[questionIndex].options[optionIndex];
     updatedQuestions[questionIndex].options = updatedQuestions[questionIndex].options.filter((_, i) => i !== optionIndex);
+    
+    // If the removed option was the correct answer, clear the correct answer
+    if (updatedQuestions[questionIndex].correctAnswer === removedOptionValue) {
+        updatedQuestions[questionIndex].correctAnswer = '';
+    }
+
     setQuestionFormData({ ...questionFormData, questions: updatedQuestions });
   };
 
@@ -131,7 +138,7 @@ const AdminPage = () => {
     if (payload.questions.length === 0) return showNotification('At least one question is required', '#f44336');
     for (const q of payload.questions) {
       if (!q.questionText) return showNotification('Question text is required', '#f44336');
-      if (q.options.length === 0) return showNotification('At least one option is required', '#f44336');
+      if (q.options.length < 2) return showNotification('At least two options are required', '#f44336');
       if (!q.correctAnswer) return showNotification('Correct answer is required', '#f44336');
       if (!q.options.includes(q.correctAnswer)) return showNotification('Correct answer must be one of the options', '#f44336');
     }
@@ -465,6 +472,12 @@ const AdminPage = () => {
                     type="text"
                     value={optionInput}
                     onChange={(e) => setOptionInput(e.target.value)}
+                     onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addOption(index, optionInput);
+                      }
+                    }}
                     className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
                   />
                   <button
@@ -493,14 +506,20 @@ const AdminPage = () => {
                 <label className="mb-2 font-medium text-gray-700 flex items-center">
                   <CheckCircle className="mr-2 text-blue-500" size={18} /> Correct Answer
                 </label>
-                <input
-                  type="text"
+                <select
                   name="correctAnswer"
                   value={q.correctAnswer}
                   onChange={(e) => handleQuestionFormChange(e, index)}
                   required
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-                />
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-white"
+                >
+                  <option value="" disabled>Select the correct answer</option>
+                  {q.options.map((opt, optIndex) => (
+                    <option key={optIndex} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
               </div>
               {questionFormData.questions.length > 1 && (
                 <button
@@ -783,55 +802,47 @@ const AdminPage = () => {
     </div>
   );
 
-// AdminPage.js
-
-// AdminPage.js
-
-const renderStudentsTable = () => {
-  return (
-    <div>
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse bg-white rounded-xl shadow-lg">
-          <thead>
-            <tr className="bg-blue-600 text-white">
-              {/* MODIFIED: Added Name column header */}
-              <th className="p-4 text-left text-sm font-semibold">Name</th>
-              <th className="p-4 text-left text-sm font-semibold">Email</th>
-              <th className="p-4 text-left text-sm font-semibold">Phone</th>
-              <th className="p-4 text-left text-sm font-semibold">Test Name</th>
-              <th className="p-4 text-left text-sm font-semibold">Score</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tests.length === 0 ? (
-              <tr>
-                {/* MODIFIED: Updated colspan */}
-                <td colSpan="5" className="p-4 text-center text-gray-500">
-                  No data available
-                </td>
+  const renderStudentsTable = () => {
+    return (
+      <div>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse bg-white rounded-xl shadow-lg">
+            <thead>
+              <tr className="bg-blue-600 text-white">
+                <th className="p-4 text-left text-sm font-semibold">Name</th>
+                <th className="p-4 text-left text-sm font-semibold">Email</th>
+                <th className="p-4 text-left text-sm font-semibold">Phone</th>
+                <th className="p-4 text-left text-sm font-semibold">Test Name</th>
+                <th className="p-4 text-left text-sm font-semibold">Score</th>
               </tr>
-            ) : (
-              tests.map((test, index) => (
-                <tr
-                  key={test._id || index}
-                  className={`border-b ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-blue-50 transition duration-150`}
-                >
-                  {/* MODIFIED: Added Name data cell */}
-                  <td className="p-4 text-gray-700">{test.name || 'N/A'}</td>
-                  <td className="p-4 text-gray-700">{test.email || 'N/A'}</td>
-                  <td className="p-4 text-gray-700">{test.phone || 'N/A'}</td>
-                  <td className="p-4 text-gray-700">{test.questionSetId?.mainHeading || 'N/A'}</td>
-                  <td className="p-4 text-gray-700">{test.score ?? '0'}</td>
+            </thead>
+            <tbody>
+              {tests.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="p-4 text-center text-gray-500">
+                    No data available
+                  </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                tests.map((test, index) => (
+                  <tr
+                    key={test._id || index}
+                    className={`border-b ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-blue-50 transition duration-150`}
+                  >
+                    <td className="p-4 text-gray-700">{test.name || 'N/A'}</td>
+                    <td className="p-4 text-gray-700">{test.email || 'N/A'}</td>
+                    <td className="p-4 text-gray-700">{test.phone || 'N/A'}</td>
+                    <td className="p-4 text-gray-700">{test.questionSetId?.mainHeading || 'N/A'}</td>
+                    <td className="p-4 text-gray-700">{test.score ?? '0'}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
-  );
-};
-
+    );
+  };
 
   const renderFormContainer = () => {
     if (currentTab === 'courses') return renderCourseForm();
