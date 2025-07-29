@@ -12,7 +12,7 @@ const paymentRoutes = require('./routes/paymentRoutes'); // Add new payment rout
 const app = express();
 
 // Middleware
-app.use(cors({ origin: process.env.ALLOWED_ORIGINS }));
+app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 // Connect to DB
