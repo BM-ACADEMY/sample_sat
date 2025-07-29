@@ -785,6 +785,8 @@ const AdminPage = () => {
 
 // AdminPage.js
 
+// AdminPage.js
+
 const renderStudentsTable = () => {
   return (
     <div>
@@ -792,6 +794,8 @@ const renderStudentsTable = () => {
         <table className="w-full border-collapse bg-white rounded-xl shadow-lg">
           <thead>
             <tr className="bg-blue-600 text-white">
+              {/* MODIFIED: Added Name column header */}
+              <th className="p-4 text-left text-sm font-semibold">Name</th>
               <th className="p-4 text-left text-sm font-semibold">Email</th>
               <th className="p-4 text-left text-sm font-semibold">Phone</th>
               <th className="p-4 text-left text-sm font-semibold">Test Name</th>
@@ -801,7 +805,8 @@ const renderStudentsTable = () => {
           <tbody>
             {tests.length === 0 ? (
               <tr>
-                <td colSpan="4" className="p-4 text-center text-gray-500">
+                {/* MODIFIED: Updated colspan */}
+                <td colSpan="5" className="p-4 text-center text-gray-500">
                   No data available
                 </td>
               </tr>
@@ -811,6 +816,8 @@ const renderStudentsTable = () => {
                   key={test._id || index}
                   className={`border-b ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-blue-50 transition duration-150`}
                 >
+                  {/* MODIFIED: Added Name data cell */}
+                  <td className="p-4 text-gray-700">{test.name || 'N/A'}</td>
                   <td className="p-4 text-gray-700">{test.email || 'N/A'}</td>
                   <td className="p-4 text-gray-700">{test.phone || 'N/A'}</td>
                   <td className="p-4 text-gray-700">{test.questionSetId?.mainHeading || 'N/A'}</td>

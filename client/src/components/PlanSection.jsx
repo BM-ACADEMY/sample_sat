@@ -18,8 +18,7 @@ const courses = [
     duration: '2 Months | Live + Recorded',
     mode: 'Online / Offline',
     language: 'Tamil & English',
-    audience:
-      'College students, small business owners, influencers, freelancers & anyone looking to earn part-time/full-time via digital marketing.',
+    audience: 'College students, small business owners, influencers, freelancers & anyone looking to earn part-time/full-time via digital marketing.',
   },
   {
     title: 'Full Stack Development Course',
@@ -27,8 +26,7 @@ const courses = [
     duration: '3 Months',
     mode: 'Online / Offline',
     language: 'Tamil & English',
-    audience:
-      'College students, freshers, aspiring web developers, and freelancers aiming for high-demand developer jobs.',
+    audience: 'College students, freshers, aspiring web developers, and freelancers aiming for high-demand developer jobs.',
   },
   {
     title: 'Video Editing + YouTube Content Creation',
@@ -36,8 +34,7 @@ const courses = [
     duration: '1.5 Months',
     mode: 'Online / Offline',
     language: 'Tamil & English',
-    audience:
-      'Aspiring creators, influencers, freelancers, and students looking to make money through video and content platforms.',
+    audience: 'Aspiring creators, influencers, freelancers, and students looking to make money through video and content platforms.',
   },
 ];
 
@@ -47,6 +44,7 @@ export default function PlanSection() {
   const [paymentInfo, setPaymentInfo] = useState(null);
   const { width, height } = useWindowSize();
   const [isConfettiActive, setIsConfettiActive] = useState(true);
+  const [loadingCourse, setLoadingCourse] = useState(null); // State for loading animation
 
   useEffect(() => {
     AOS.init({ duration: 800, once: true });
@@ -81,6 +79,8 @@ export default function PlanSection() {
       notify('Please complete the Test first to proceed with payment.');
       return;
     }
+
+    setLoadingCourse(course.title); // Activate loading animation
 
     try {
       const response = await axios.post(`${API_URL}/create-order`, {
@@ -117,15 +117,18 @@ export default function PlanSection() {
               });
               setShowSuccessModal(true);
               setIsConfettiActive(true);
+              setLoadingCourse(null); // Deactivate loading animation on success
               setTimeout(() => {
                 setIsConfettiActive(false);
                 window.location.href = 'https://wa.me/919944940051?text=Payment%20successful%20for%20' + encodeURIComponent(course.title);
               }, 8000);
             } else {
               notify('Payment verification failed.');
+              setLoadingCourse(null); // Deactivate loading on failure
             }
           } catch (err) {
             notify('Payment verification failed. Please contact support.');
+            setLoadingCourse(null); // Deactivate loading on error
           }
         },
         prefill: {
@@ -133,12 +136,21 @@ export default function PlanSection() {
           contact: testResult.phone,
         },
         theme: { color: '#F4D03F' },
+        modal: {
+          ondismiss: function () {
+            setLoadingCourse(null); // Deactivate loading if user closes modal
+          },
+        },
       };
 
       const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function () {
+        setLoadingCourse(null); // Deactivate loading on explicit payment failure
+      });
       rzp.open();
     } catch (err) {
       notify('Failed to initiate payment. Please try again.');
+      setLoadingCourse(null); // Deactivate loading on initial API error
     }
   };
 
@@ -239,10 +251,39 @@ export default function PlanSection() {
                 </button>
                 <button
                   onClick={() => handlePayment(course)}
-                  className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-semibold rounded-md py-2 hover:opacity-90 transition flex items-center justify-center"
+                  disabled={loadingCourse === course.title}
+                  className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-semibold rounded-md py-2 hover:opacity-90 transition flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  <CreditCard size={16} className="mr-2" />
-                  Enroll Now
+                  {loadingCourse === course.title ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard size={16} className="mr-2" />
+                      Enroll Now
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -258,26 +299,26 @@ export default function PlanSection() {
               height={height}
               numberOfPieces={800}
               recycle={false}
-              style={{ 
-                position: 'fixed', 
+              style={{
+                position: 'fixed',
                 zIndex: 100,
                 pointerEvents: 'none'
               }}
               onConfettiComplete={() => setIsConfettiActive(false)}
             />
           )}
-          <div 
+          <div
             className="fixed inset-0 bg-black/80 z-50"
             onClick={() => setShowSuccessModal(false)}
           />
           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 pointer-events-none">
-            <div 
+            <div
               className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-2xl p-8 max-w-md w-full relative overflow-hidden pointer-events-auto"
               data-aos="zoom-in"
             >
               <div className="absolute -top-20 -right-20 w-40 h-40 bg-yellow-400/10 rounded-full blur-xl"></div>
               <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-green-400/10 rounded-full blur-xl"></div>
-              <button 
+              <button
                 onClick={() => setShowSuccessModal(false)}
                 className="absolute top-4 right-4 text-gray-400 hover:text-white transition"
               >

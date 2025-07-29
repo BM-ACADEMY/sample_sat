@@ -1,3 +1,5 @@
+// TestPage.jsx
+
 import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { TestResultContext } from "../context/TestResultContext";
@@ -11,6 +13,7 @@ const TestPage = () => {
   const [questionSets, setQuestionSets] = useState([]);
   const [selectedSetId, setSelectedSetId] = useState("");
   const [formData, setFormData] = useState({
+    name: "", // ADDED
     email: localStorage.getItem("email") || "",
     phone: localStorage.getItem("phone") || ""
   });
@@ -28,7 +31,7 @@ const TestPage = () => {
         const sets = Array.isArray(res.data) ? res.data : [];
         setQuestionSets(sets);
         if (sets.length > 0) {
-          setSelectedSetId(sets[0]._id); // Select the first set by default
+          setSelectedSetId(sets[0]._id);
         }
       })
       .catch(() => {
@@ -51,13 +54,17 @@ const TestPage = () => {
 
   const handleSetChange = (e) => {
     setSelectedSetId(e.target.value);
-    setAnswers({}); // Reset answers when changing question set
+    setAnswers({});
   };
 
   const validateForm = () => {
     const messages = [];
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^\d{10}$/;
+
+    if (!formData.name.trim()) { // ADDED
+        messages.push("Full name is required");
+    }
 
     if (!formData.email) {
       messages.push("Email is required");
@@ -99,16 +106,18 @@ const TestPage = () => {
 
     try {
       const res = await axios.post(`${API_URL}/submit-test`, {
+        name: formData.name, // ADDED
         email: formData.email,
         phone: formData.phone,
         answers: answerSheet,
-        questionSetId: selectedSetId // Send questionSetId
+        questionSetId: selectedSetId
       });
 
       localStorage.setItem("email", formData.email);
       localStorage.setItem("phone", formData.phone);
 
       setTestResult({
+        name: formData.name, // ADDED
         score: res.data.score,
         percentage: res.data.percentage,
         courses: res.data.courses,
@@ -120,6 +129,7 @@ const TestPage = () => {
       window.parent.postMessage(
         {
           type: "testSubmitted",
+          name: formData.name, // ADDED
           score: res.data.score,
           percentage: res.data.percentage,
           courses: res.data.courses,
@@ -134,7 +144,7 @@ const TestPage = () => {
       setSubmitted(true);
 
       // Clear the form and answers
-      setFormData({ email: "", phone: "" });
+      setFormData({ name: "", email: "", phone: "" }); // MODIFIED
       setAnswers({});
       localStorage.removeItem("email");
       localStorage.removeItem("phone");
@@ -156,13 +166,10 @@ const TestPage = () => {
       <div className="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-2xl">
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white">
           <h2 className="text-3xl font-bold text-center">Scholastic Assessment Test</h2>
-          {/* <p className="text-center text-blue-100 mt-2">
-            Select a question set and answer all questions to complete the 100-mark test
-          </p> */}
         </div>
 
         <div className="p-6 space-y-6">
-          <div className="grid grid-cols-1 gap-4">
+          <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Select Question Set
@@ -172,16 +179,29 @@ const TestPage = () => {
                 onChange={handleSetChange}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="" disabled>
-                  Select a question set
-                </option>
+                <option value="" disabled>Select a question set</option>
                 {questionSets.map((set) => (
-                  <option key={set._id} value={set._id}>
-                    {set.mainHeading}
-                  </option>
+                  <option key={set._id} value={set._id}>{set.mainHeading}</option>
                 ))}
               </select>
             </div>
+
+            {/* ADDED NAME INPUT FIELD */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Full Name
+              </label>
+              <input
+                type="text"
+                name="name"
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="John Doe"
+                value={formData.name}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -216,29 +236,19 @@ const TestPage = () => {
           </div>
 
           {selectedSetId && (
-            <div className="space-y-5">
+             <div className="space-y-5">
               <h3 className="text-xl font-bold text-gray-800 mb-4">
                 {selectedQuestionSet.mainHeading}
               </h3>
               {selectedQuestionSet.questions.map((q, qIndex) => (
-                <div
-                  key={q._id}
-                  className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow mb-4"
-                >
+                <div key={q._id} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow mb-4">
                   <p className="font-semibold text-lg text-gray-800 mb-3">
                     <span className="text-blue-600 mr-2">Q{qIndex + 1}:</span>
                     {q.questionText}
                   </p>
                   <div className="space-y-2">
                     {q.options.map((opt, idx) => (
-                      <label
-                        key={idx}
-                        className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${
-                          answers[q._id] === opt
-                            ? "bg-blue-50 border border-blue-200"
-                            : "hover:bg-gray-50"
-                        }`}
-                      >
+                      <label key={idx} className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${answers[q._id] === opt ? "bg-blue-50 border border-blue-200" : "hover:bg-gray-50"}`}>
                         <input
                           type="radio"
                           name={q._id}
@@ -259,33 +269,13 @@ const TestPage = () => {
           <button
             onClick={handleSubmit}
             disabled={submitted || !selectedSetId}
-            className={`w-full py-4 rounded-xl text-white font-bold text-lg transition-all ${
-              submitted || !selectedSetId
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700 active:scale-95"
-            }`}
+            className={`w-full py-4 rounded-xl text-white font-bold text-lg transition-all ${submitted || !selectedSetId ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 active:scale-95"}`}
           >
             {submitted ? (
               <span className="flex items-center justify-center">
-                <svg
-                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 Processing Results...
               </span>
