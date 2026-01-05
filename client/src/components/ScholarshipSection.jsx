@@ -19,7 +19,7 @@ const ScholarshipSection = () => {
       <div className="max-w-6xl mx-auto px-6 md:px-12 lg:px-20">
         {/* Header */}
         <div className="text-center mb-12" data-aos="fade-up">
-         
+
           <div className="header-text text-center mb-10">
           <h1 className="text-3xl md:text-4xl font-bold text-white">
             🎓 Scholarship Slabs at{" "}
@@ -88,9 +88,9 @@ const ScholarshipSection = () => {
         {/* Programs */}
         <div className="mt-12 text-center" data-aos="fade-up" data-aos-delay="200">
           <h3 className="text-3xl font-bold text-gray-100 mb-6">
-            Apply your <span className="text-yellow-500">scholarship</span>
+            APPLY YOUR  <span className="text-yellow-500">SCHOLARSHIP</span>
             <br />
-            to top-rated programs:
+            TO TOP-RATED PROGRAMS
           </h3>
 
           <div className="flex flex-wrap justify-center gap-5">

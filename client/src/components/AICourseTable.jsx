@@ -6,35 +6,35 @@ import axios from 'axios';
 const courses = [
   {
     title: 'AI for School Students',
-    audience: '8th–12th std students',
+    audience: '8th–12th Std Students',
     original: '₹1,499',
     offer: '₹749',
     mode: 'Online/Offline',
   },
   {
     title: 'AI for College Students',
-    audience: 'Final year students & tech learners',
+    audience: 'Final Year Students & Tech Learners',
     original: '₹1,999',
     offer: '₹999',
     mode: 'Online/Offline',
   },
   {
     title: 'AI for Job Seekers',
-    audience: 'Freshers, job hunters',
+    audience: 'Freshers & Job Hunters',
     original: '₹1,999',
     offer: '₹999',
     mode: 'Online/Offline',
   },
   {
     title: 'AI for Entrepreneurs',
-    audience: 'Startup founders, solo biz owners',
+    audience: 'Startup Founders & Solo Business Owners',
     original: '₹2,499',
     offer: '₹1,299',
     mode: 'Online/Offline',
   },
   {
     title: 'AI for Digital Marketers',
-    audience: 'Marketers, freelancers, media teams',
+    audience: 'Marketers, Freelancers & Media Teams',
     original: '₹2,499',
     offer: '₹1,299',
     mode: 'Online/Offline',
@@ -129,7 +129,7 @@ const AICourseTable = () => {
               localStorage.setItem('userEmail', userDetails.email);
               localStorage.setItem('userPhone', userDetails.phone);
               // userDetails is already cleared by handlePayClick for the next open, but good to ensure here too if needed
-              setUserDetails({ email: '', phone: '' }); 
+              setUserDetails({ email: '', phone: '' });
 
               toast.success(
                 <div>
@@ -276,12 +276,12 @@ const AICourseTable = () => {
             <thead>
               <tr className="bg-indigo-600 text-white uppercase text-sm leading-normal">
                 <th className="py-4 px-6 text-left">Course</th>
-                <th className="py-4 px-6 text-left">Who it's for</th>
-                <th className="py-4 px-6 text-left">Original</th>
-                <th className="py-4 px-6 text-left">Offer</th>
+                <th className="py-4 px-6 text-left">WHO IS IT FOR</th>
+                <th className="py-4 px-6 text-left">ORIGINAL PRICE</th>
+                <th className="py-4 px-6 text-left">OFFER PRICE</th>
                 <th className="py-4 px-6 text-left">Mode</th>
                 <th className="py-4 px-6 text-center">Brochure</th>
-                <th className="py-4 px-6 text-center">Pay</th>
+                <th className="py-4 px-6 text-center">PAY NOW</th>
                 <th className="py-4 px-6 text-center">Syllabus</th>
               </tr>
             </thead>

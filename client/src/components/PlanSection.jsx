@@ -34,7 +34,7 @@ const courses = [
     duration: '1.5 Months',
     mode: 'Online / Offline',
     language: 'Tamil & English',
-    audience: 'Aspiring creators, influencers, freelancers, and students looking to make money through video and content platforms.',
+    audience: 'Aspiring creators, influencers, freelancers, and students who want to earn via video editing & content platforms.',
   },
 ];
 
@@ -230,7 +230,7 @@ export default function PlanSection() {
               </ul>
 
               <div className="text-sm text-gray-400 mb-6">
-                <strong className="block text-white">Who is this for?</strong>
+                <strong className="block text-white">“Ideal For:”</strong>
                 {course.audience}
               </div>
 
