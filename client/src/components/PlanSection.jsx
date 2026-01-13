@@ -230,7 +230,7 @@ export default function PlanSection() {
               </ul>
 
               <div className="text-sm text-gray-400 mb-6">
-                <strong className="block text-white">“Ideal For:”</strong>
+                <strong className="block text-white">Ideal For:</strong>
                 {course.audience}
               </div>
 
